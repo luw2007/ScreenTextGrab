@@ -37,7 +37,6 @@ final class CaptureOutputWriter {
         outputPreset: CaptureOutputPreset,
         targetBundleIdentifier: String? = nil,
         ocrConfidence: Float? = nil,
-        ocrResult: OCRResult? = nil,
         notificationDisplayFrame: CGRect? = nil,
         successStatusMessage: String? = nil
     ) -> ClipboardWriteResult {
@@ -47,8 +46,7 @@ final class CaptureOutputWriter {
             contentKind: contentKind,
             preset: outputPreset,
             source: source,
-            targetBundleIdentifier: targetBundleIdentifier,
-            ocrResult: ocrResult
+            targetBundleIdentifier: targetBundleIdentifier
         )
         let formattedText = payload.string
 

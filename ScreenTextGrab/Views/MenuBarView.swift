@@ -609,8 +609,6 @@ struct MenuBarView: View {
             return "curlybraces.square"
         case .json:
             return "curlybraces"
-        case .monospace:
-            return "textformat"
         }
     }
 
@@ -1357,8 +1355,7 @@ struct MenuBarView: View {
                 contentKind: entry.contentKind,
                 source: entry.source,
                 outputPreset: preset,
-                targetBundleIdentifier: appState.activeTargetBundleIdentifier,
-                ocrResult: nil
+                targetBundleIdentifier: appState.activeTargetBundleIdentifier
             ) else {
                 smartActionFeedback = InlineFeedback(
                     message: "Kopyalama servisi şu anda hazır değil.",

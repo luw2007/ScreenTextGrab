@@ -45,121 +45,87 @@ struct OCRResult: Sendable {
 
     /// Eş aralıklı (monospace) hizalı metin üretir.
     /// Metin bloklarının boundingBox konumlarını kullanarak satırlara ayırır,
-    /// yatay boşlukları space karakterleriyle ve dikey boşlukları boş satırlarla korur.
-    /// - Parameter columns: İsteğe bağlı karakter sütunu sayısı. Verilirse karakter genişliği
-    ///   bu değere göre hesaplanır; verilmezse bloklardan otomatik kestirilir.
-    func monospaceAlignedText(columns: Int? = nil) -> String {
+    /// yatay konumu sabit sütun sayısına göre padding ile korur,
+    /// dikey boşlukları boş satırlarla ifade eder.
+    /// - Parameter columns: Çıktı toplam sütun sayısı (varsayılan 120).
+    ///   Yatay hizalama doğruluğunu kontrol eder.
+    func monospaceAlignedText(columns: Int = 120) -> String {
         guard !blocks.isEmpty else {
             return ""
         }
 
-        let charWidth = resolveCharacterWidth(columns: columns)
-        guard charWidth > 0 else {
-            return fullText
+        let resolvedColumns = max(20, min(300, columns))
+
+        // y'ye göre sırala (büyük y = ekranın üstü, y yakınsa x'e göre)
+        let sorted = blocks.sorted { a, b in
+            if abs(a.boundingBox.midY - b.boundingBox.midY) < 0.02 {
+                return a.boundingBox.minX < b.boundingBox.minX
+            }
+            return a.boundingBox.midY > b.boundingBox.midY
         }
 
-        let lines = monospaceClusterLines()
-        guard !lines.isEmpty else {
-            return ""
+        // Satır kümeleme
+        var rows: [[OCRTextBlock]] = []
+        var currentRow: [OCRTextBlock] = []
+        for block in sorted {
+            if let first = currentRow.first {
+                if abs(block.boundingBox.midY - first.boundingBox.midY) < 0.02 {
+                    currentRow.append(block)
+                } else {
+                    rows.append(currentRow)
+                    currentRow = [block]
+                }
+            } else {
+                currentRow = [block]
+            }
+        }
+        if !currentRow.isEmpty {
+            rows.append(currentRow)
         }
 
-        let medianLineHeight = monospaceMedianLineHeight(lines: lines)
+        // Medyan satır yüksekliği — boş satır hesaplaması için
+        let rowHeights = rows
+            .compactMap { $0.first?.boundingBox.height }
+            .filter { $0 > 0 }
+            .sorted()
+        let medianRowHeight = rowHeights.isEmpty ? 0.02 : rowHeights[rowHeights.count / 2]
 
-        var output: [String] = []
-        var previousLineMinY: CGFloat?
+        var output = ""
+        var lastRowTopY: CGFloat?
 
-        for line in lines {
-            let sortedLine = line.sorted { $0.boundingBox.minX < $1.boundingBox.minX }
-            let lineMinY = sortedLine.map { $0.boundingBox.minY }.min() ?? 0
-            let lineMaxY = sortedLine.map { $0.boundingBox.maxY }.max() ?? 0
+        for row in rows {
+            let sortedRow = row.sorted { $0.boundingBox.minX < $1.boundingBox.minX }
+            let rowTopY = sortedRow.map { $0.boundingBox.maxY }.max() ?? 0
 
-            if let prevMinY = previousLineMinY, medianLineHeight > 0 {
-                let verticalGap = prevMinY - lineMaxY
-                let blankLineCount = max(0, Int((verticalGap / medianLineHeight).rounded()) - 1)
-                if blankLineCount > 0 {
-                    output.append(contentsOf: Array(repeating: "", count: blankLineCount))
+            // Dikey boşluk → boş satır
+            if let ly = lastRowTopY {
+                let gap = ly - rowTopY
+                let blankLines = Int(gap / max(medianRowHeight * 1.5, 0.015))
+                if blankLines > 0 {
+                    output += String(repeating: "\n", count: min(blankLines, 6))
                 }
             }
 
-            output.append(monospaceLineText(sortedLine, charWidth: charWidth))
-            previousLineMinY = lineMinY
-        }
-
-        return output.joined(separator: "\n")
-    }
-
-    private func resolveCharacterWidth(columns: Int?) -> CGFloat {
-        if let columns, columns > 0 {
-            let minX = blocks.map { $0.boundingBox.minX }.min() ?? 0
-            let maxX = blocks.map { $0.boundingBox.maxX }.max() ?? 1
-            return max(0.001, (maxX - minX) / CGFloat(columns))
-        }
-
-        let widths = blocks
-            .filter { !$0.text.isEmpty }
-            .map { $0.boundingBox.width / CGFloat($0.text.count) }
-            .filter { $0 > 0 }
-            .sorted()
-
-        guard !widths.isEmpty else {
-            return 0.02
-        }
-
-        return widths[widths.count / 2]
-    }
-
-    private func monospaceClusterLines() -> [[OCRTextBlock]] {
-        let sortedByY = blocks.sorted { $0.boundingBox.midY > $1.boundingBox.midY }
-        let lineThreshold: CGFloat = 0.028
-
-        var lines: [[OCRTextBlock]] = []
-        for block in sortedByY {
-            if let lastMidY = lines.last?.first?.boundingBox.midY,
-               abs(block.boundingBox.midY - lastMidY) < lineThreshold {
-                lines[lines.count - 1].append(block)
-            } else {
-                lines.append([block])
+            // Yatay: sütun konumuna padding ile hizala
+            var line = ""
+            for block in sortedRow {
+                let col = Int(block.boundingBox.minX * CGFloat(resolvedColumns))
+                if col > line.count {
+                    line += String(repeating: " ", count: col - line.count)
+                } else if !line.isEmpty {
+                    line += " "
+                }
+                line += block.text
             }
-        }
-        return lines
-    }
-
-    private func monospaceMedianLineHeight(lines: [[OCRTextBlock]]) -> CGFloat {
-        let heights = lines
-            .map { line in
-                let minY = line.map { $0.boundingBox.minY }.min() ?? 0
-                let maxY = line.map { $0.boundingBox.maxY }.max() ?? 0
-                return maxY - minY
-            }
-            .filter { $0 > 0 }
-            .sorted()
-
-        guard !heights.isEmpty else {
-            return 0.04
+            output += line + "\n"
+            lastRowTopY = rowTopY
         }
 
-        return heights[heights.count / 2]
-    }
-
-    private func monospaceLineText(_ line: [OCRTextBlock], charWidth: CGFloat) -> String {
-        guard let first = line.first else {
-            return ""
+        if output.hasSuffix("\n") {
+            output.removeLast()
         }
 
-        var result = ""
-        var cursorX = first.boundingBox.minX
-
-        for block in line {
-            let horizontalGap = block.boundingBox.minX - cursorX
-            if horizontalGap > 0 {
-                let spaceCount = max(1, Int((horizontalGap / charWidth).rounded()))
-                result.append(String(repeating: " ", count: spaceCount))
-            }
-            result.append(block.text)
-            cursorX = block.boundingBox.maxX
-        }
-
-        return result
+        return output
     }
 
     private var standardFormattedText: String {

@@ -233,7 +233,6 @@ enum CaptureOutputPreset: String, CaseIterable, Codable, Equatable, Sendable, Id
     case office
     case markdown
     case json
-    case monospace
 
     var id: String { rawValue }
 
@@ -251,8 +250,6 @@ enum CaptureOutputPreset: String, CaseIterable, Codable, Equatable, Sendable, Id
             return "Markdown"
         case .json:
             return "JSON"
-        case .monospace:
-            return L10n.pair("Eş Aralıklı", "Monospace")
         }
     }
 
@@ -270,8 +267,6 @@ enum CaptureOutputPreset: String, CaseIterable, Codable, Equatable, Sendable, Id
             return "MD"
         case .json:
             return "JSON"
-        case .monospace:
-            return L10n.pair("Mono", "Mono")
         }
     }
 
@@ -289,8 +284,6 @@ enum CaptureOutputPreset: String, CaseIterable, Codable, Equatable, Sendable, Id
             return L10n.pair("Kod ve tablo için hazır", "Ready for code and tables")
         case .json:
             return L10n.pair("Otomasyon için yapılandırılmış", "Structured for automation")
-        case .monospace:
-            return L10n.pair("Konumu boşluklarla korur", "Preserves layout with spaces")
         }
     }
 
@@ -308,8 +301,6 @@ enum CaptureOutputPreset: String, CaseIterable, Codable, Equatable, Sendable, Id
             return L10n.pair("Kod ve tablo gibi içerikleri Markdown uyumlu biçimde hazırlar.", "Formats content like code and tables for Markdown.")
         case .json:
             return L10n.pair("Otomasyon ve entegrasyonlar için yapılandırılmış çıktı üretir.", "Produces structured output for automation and integrations.")
-        case .monospace:
-            return L10n.pair("Metin bloklarının ekran konumını kullanarak eş aralıklı hizalama üretir; terminal ve tablo görünümleri için ideal.", "Uses block positions to produce monospace-aligned text; ideal for terminal and table layouts.")
         }
     }
 }
@@ -660,6 +651,50 @@ enum CaptureOutputPresetStore {
 
     static func save(_ preset: CaptureOutputPreset, defaults: UserDefaults = .standard) {
         defaults.set(preset.rawValue, forKey: key)
+    }
+}
+
+struct MonospaceLayoutSettings: Codable, Equatable, Sendable {
+    var isEnabled: Bool
+    var columns: Int
+
+    static let defaultColumns = 120
+    static let defaultValue = MonospaceLayoutSettings(isEnabled: false, columns: defaultColumns)
+
+    init(isEnabled: Bool = false, columns: Int = defaultColumns) {
+        self.isEnabled = isEnabled
+        self.columns = max(20, min(300, columns))
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case isEnabled
+        case columns
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? false
+        let columns = try container.decodeIfPresent(Int.self, forKey: .columns) ?? Self.defaultColumns
+        self.init(isEnabled: isEnabled, columns: columns)
+    }
+}
+
+enum MonospaceLayoutSettingsStore {
+    static let key = "screenTextGrab.monospaceLayoutSettings"
+
+    static func load(defaults: UserDefaults = .standard) -> MonospaceLayoutSettings {
+        guard let data = defaults.data(forKey: key),
+              let settings = try? JSONDecoder().decode(MonospaceLayoutSettings.self, from: data) else {
+            return .defaultValue
+        }
+        return settings
+    }
+
+    static func save(_ settings: MonospaceLayoutSettings, defaults: UserDefaults = .standard) {
+        guard let data = try? JSONEncoder().encode(settings) else {
+            return
+        }
+        defaults.set(data, forKey: key)
     }
 }
 

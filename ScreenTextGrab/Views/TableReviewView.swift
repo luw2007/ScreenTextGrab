@@ -351,8 +351,7 @@ struct TableReviewView: View {
             contentKind: session.entry.contentKind,
             source: session.entry.source,
             outputPreset: preset,
-            targetBundleIdentifier: appState.activeTargetBundleIdentifier,
-            ocrResult: nil
+            targetBundleIdentifier: appState.activeTargetBundleIdentifier
         ) else {
             feedback = InlineFeedback(
                 message: L10n.pair("Kopyalama servisi su anda hazir degil.", "The copy service is not ready right now."),

@@ -38,8 +38,7 @@ protocol CaptureCoordinating: AnyObject {
         contentKind: ClipboardHistoryEntry.ContentKind,
         source: ClipboardHistoryEntry.SourceContext?,
         outputPreset: CaptureOutputPreset,
-        targetBundleIdentifier: String?,
-        ocrResult: OCRResult?
+        targetBundleIdentifier: String?
     ) -> ClipboardWriteResult
 }
 
@@ -57,8 +56,7 @@ extension CaptureCoordinating {
             contentKind: contentKind,
             source: source,
             outputPreset: outputPreset,
-            targetBundleIdentifier: nil,
-            ocrResult: nil
+            targetBundleIdentifier: nil
         )
     }
 }
@@ -651,8 +649,7 @@ final class CaptureCoordinator: CaptureCoordinating {
         contentKind: ClipboardHistoryEntry.ContentKind,
         source: ClipboardHistoryEntry.SourceContext?,
         outputPreset: CaptureOutputPreset,
-        targetBundleIdentifier: String? = nil,
-        ocrResult: OCRResult? = nil
+        targetBundleIdentifier: String? = nil
     ) -> ClipboardWriteResult {
         outputWriter.copyCapturedText(
             rawText: rawText,
@@ -660,8 +657,7 @@ final class CaptureCoordinator: CaptureCoordinating {
             contentKind: contentKind,
             source: source,
             outputPreset: outputPreset,
-            targetBundleIdentifier: targetBundleIdentifier,
-            ocrResult: ocrResult
+            targetBundleIdentifier: targetBundleIdentifier
         )
     }
 
@@ -1177,14 +1173,15 @@ final class CaptureCoordinator: CaptureCoordinating {
         appState.statusMessage = "Panoya kopyalanıyor..."
         STGLog.pipeline.info("State → copying")
 
+        let effectiveRawText = resolvedRawText(for: best)
+
         let clipboardResult = outputWriter.copyCapturedText(
-            rawText: best.text,
+            rawText: effectiveRawText,
             captureMode: captureMode,
             contentKind: historyContentKind(for: best),
             source: source,
             outputPreset: outputPreset,
             ocrConfidence: best.ocrResult.averageConfidence,
-            ocrResult: best.ocrResult,
             notificationDisplayFrame: notificationDisplayFrame,
             successStatusMessage: CaptureRecognitionHeuristics.successStatusMessage(for: best)
         )
@@ -1196,6 +1193,17 @@ final class CaptureCoordinator: CaptureCoordinating {
         case .failedWrite, .failedReadback:
             throw CapturePipelineError.clipboardFailed(result: clipboardResult)
         }
+    }
+
+    private func resolvedRawText(for selection: CaptureOCRSelection) -> String {
+        guard appState.monospaceLayoutSettings.isEnabled else {
+            return selection.text
+        }
+
+        let monospaceText = selection.ocrResult.monospaceAlignedText(
+            columns: appState.monospaceLayoutSettings.columns
+        )
+        return monospaceText.isEmpty ? selection.text : monospaceText
     }
 
     nonisolated
@@ -1509,13 +1517,22 @@ final class CaptureCoordinator: CaptureCoordinating {
     ) async -> Bool {
         guard appState.watchState == .active else { return false }
 
+        let effectiveRawText: String
+        if appState.monospaceLayoutSettings.isEnabled {
+            let monospaceText = selection.ocrResult.monospaceAlignedText(
+                columns: appState.monospaceLayoutSettings.columns
+            )
+            effectiveRawText = monospaceText.isEmpty ? rawText : monospaceText
+        } else {
+            effectiveRawText = rawText
+        }
+
         let clipboardResult = outputWriter.copyCapturedText(
-            rawText: rawText,
+            rawText: effectiveRawText,
             captureMode: currentWatchSession?.captureMode ?? appState.captureMode,
             contentKind: historyContentKind(for: selection),
             source: currentWatchSession?.source,
             outputPreset: currentWatchSession?.outputPreset ?? appState.captureOutputPreset,
-            ocrResult: selection.ocrResult,
             notificationDisplayFrame: preferredDisplay?.frame,
             successStatusMessage: "👁 \(CaptureRecognitionHeuristics.successStatusMessage(for: selection))"
         )
