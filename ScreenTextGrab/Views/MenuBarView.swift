@@ -111,33 +111,13 @@ struct MenuBarView: View {
     }
 
     private var background: some View {
-        LinearGradient(
-            colors: [.surfaceTop, .surfaceBottom],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .overlay(alignment: .topTrailing) {
-            Circle()
-                .fill(Color.accentCool.opacity(0.16))
-                .frame(width: 168, height: 168)
-                .blur(radius: 36)
-                .offset(x: 54, y: -52)
+        ZStack {
+            // Raycast-style material background with tint
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .overlay(Color.rayBackground.opacity(0.70))
+                .ignoresSafeArea()
         }
-        .overlay(alignment: .bottomLeading) {
-            Circle()
-                .fill(Color.accentWarm.opacity(0.12))
-                .frame(width: 184, height: 184)
-                .blur(radius: 42)
-                .offset(x: -56, y: 70)
-        }
-        .overlay {
-            LinearGradient(
-                colors: [Color.white.opacity(0.06), Color.clear, Color.black.opacity(0.10)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        }
-        .ignoresSafeArea()
     }
 
     private var header: some View {

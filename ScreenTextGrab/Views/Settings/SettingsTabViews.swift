@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct SettingsGeneralTabView: View {
+    @EnvironmentObject private var themeManager: ThemeManager
+
     let interfaceLanguageBinding: Binding<InterfaceLanguage>
     let interfaceLanguageDetail: String
     let languageFeedback: InlineFeedback?
@@ -82,6 +84,23 @@ struct SettingsGeneralTabView: View {
                     if let languageFeedback {
                         renderLanguageFeedback(languageFeedback)
                     }
+                }
+
+                SettingsSectionCard(
+                    title: L10n.pair("Görünüm", "Appearance"),
+                    subtitle: L10n.pair("Menü paneli ve ayarlar için tema seç.", "Choose a theme for the menu panel and settings.")
+                ) {
+                    Picker("", selection: Binding(
+                        get: { themeManager.mode },
+                        set: { themeManager.setMode($0) }
+                    )) {
+                        ForEach(ThemeMode.allCases) { mode in
+                            Label(mode.title, systemImage: mode.icon)
+                                .tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .accessibilityLabel(L10n.pair("Tema", "Theme"))
                 }
 
                 SettingsSectionCard(
