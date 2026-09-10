@@ -11,6 +11,7 @@ struct SettingsGeneralTabView: View {
     let monospaceLayoutEnabledBinding: Binding<Bool>
     let monospaceLayoutColumns: Int
     let onMonospaceLayoutColumnsChange: (Int) -> Void
+    let monospaceMulticolumnSortingBinding: Binding<Bool>
     let isRecordingHotkey: Bool
     let hotkeyDisplayLabel: String
     let hotkeyFeedback: HotkeyFeedback?
@@ -157,6 +158,22 @@ struct SettingsGeneralTabView: View {
                             .tint(.accentMint)
 
                             Text(L10n.pair("Daha fazla sütun = daha hassas yatay hizalama.", "More columns = more precise horizontal alignment."))
+                                .font(.system(size: 10.5, weight: .medium, design: .rounded))
+                                .foregroundStyle(.secondary)
+
+                            Rectangle()
+                                .fill(Color.white.opacity(0.08))
+                                .frame(height: 1)
+                                .padding(.vertical, 4)
+
+                            Toggle(isOn: monospaceMulticolumnSortingBinding) {
+                                Text(L10n.pair("Çok sütunlu okuma sırası", "Multi-column reading order"))
+                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            }
+                            .toggleStyle(.switch)
+                            .tint(.accentMint)
+
+                            Text(L10n.pair("Boşluk ağacı ile sütunları algılar, sol sütunu tamamen okur sonra sağ sütuna geçer.", "Detects columns with a gap tree; reads the left column fully before the right column."))
                                 .font(.system(size: 10.5, weight: .medium, design: .rounded))
                                 .foregroundStyle(.secondary)
                         }

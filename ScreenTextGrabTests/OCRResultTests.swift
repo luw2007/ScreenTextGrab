@@ -320,4 +320,86 @@ final class OCRResultTests: XCTestCase {
         XCTAssertTrue(outputLow.hasSuffix("Test"))
         XCTAssertTrue(outputHigh.hasSuffix("Test"))
     }
+
+    // MARK: - Gap Tree Multi-column Sorting
+
+    func testReadingOrderSortedTwoColumns() {
+        // Sol sütun: 3 satır, sağ sütun: 3 satır
+        let result = OCRResult(
+            blocks: [
+                OCRTextBlock(text: "L1", confidence: 0.95, boundingBox: CGRect(x: 0.05, y: 0.85, width: 0.06, height: 0.04)),
+                OCRTextBlock(text: "L2", confidence: 0.95, boundingBox: CGRect(x: 0.05, y: 0.75, width: 0.06, height: 0.04)),
+                OCRTextBlock(text: "L3", confidence: 0.95, boundingBox: CGRect(x: 0.05, y: 0.65, width: 0.06, height: 0.04)),
+                OCRTextBlock(text: "R1", confidence: 0.95, boundingBox: CGRect(x: 0.60, y: 0.85, width: 0.06, height: 0.04)),
+                OCRTextBlock(text: "R2", confidence: 0.95, boundingBox: CGRect(x: 0.60, y: 0.75, width: 0.06, height: 0.04)),
+                OCRTextBlock(text: "R3", confidence: 0.95, boundingBox: CGRect(x: 0.60, y: 0.65, width: 0.06, height: 0.04))
+            ],
+            captureDate: Date(),
+            sourceRect: .zero
+        )
+
+        let sorted = result.readingOrderSortedBlocks()
+        let texts = sorted.map(\.text)
+
+        // Sol sütun tamamen önce, sonra sağ sütun
+        XCTAssertEqual(texts, ["L1", "L2", "L3", "R1", "R2", "R3"])
+    }
+
+    func testReadingOrderSortedSingleColumnReturnsOriginal() {
+        let result = OCRResult(
+            blocks: [
+                OCRTextBlock(text: "A", confidence: 0.95, boundingBox: CGRect(x: 0.10, y: 0.80, width: 0.04, height: 0.04)),
+                OCRTextBlock(text: "B", confidence: 0.95, boundingBox: CGRect(x: 0.10, y: 0.70, width: 0.04, height: 0.04))
+            ],
+            captureDate: Date(),
+            sourceRect: .zero
+        )
+
+        let sorted = result.readingOrderSortedBlocks()
+        XCTAssertEqual(sorted.map(\.text), ["A", "B"])
+    }
+
+    func testMonospaceWithMulticolumnSorting() {
+        let result = OCRResult(
+            blocks: [
+                OCRTextBlock(text: "Left1", confidence: 0.95, boundingBox: CGRect(x: 0.05, y: 0.85, width: 0.10, height: 0.04)),
+                OCRTextBlock(text: "Left2", confidence: 0.95, boundingBox: CGRect(x: 0.05, y: 0.75, width: 0.10, height: 0.04)),
+                OCRTextBlock(text: "Right1", confidence: 0.95, boundingBox: CGRect(x: 0.60, y: 0.85, width: 0.12, height: 0.04)),
+                OCRTextBlock(text: "Right2", confidence: 0.95, boundingBox: CGRect(x: 0.60, y: 0.75, width: 0.12, height: 0.04))
+            ],
+            captureDate: Date(),
+            sourceRect: .zero
+        )
+
+        let output = result.monospaceAlignedText(columns: 120, multicolumnSorting: true)
+        let lines = output.components(separatedBy: "\n").filter { !$0.isEmpty }
+
+        // Sol sütun satırları önce, sonra sağ sütun satırları
+        XCTAssertTrue(lines[0].contains("Left1"))
+        XCTAssertTrue(lines[1].contains("Left2"))
+        XCTAssertTrue(lines[2].contains("Right1"))
+        XCTAssertTrue(lines[3].contains("Right2"))
+    }
+
+    func testMonospaceWithoutMulticolumnSortingInterleavesRows() {
+        let result = OCRResult(
+            blocks: [
+                OCRTextBlock(text: "Left1", confidence: 0.95, boundingBox: CGRect(x: 0.05, y: 0.85, width: 0.10, height: 0.04)),
+                OCRTextBlock(text: "Left2", confidence: 0.95, boundingBox: CGRect(x: 0.05, y: 0.75, width: 0.10, height: 0.04)),
+                OCRTextBlock(text: "Right1", confidence: 0.95, boundingBox: CGRect(x: 0.60, y: 0.85, width: 0.12, height: 0.04)),
+                OCRTextBlock(text: "Right2", confidence: 0.95, boundingBox: CGRect(x: 0.60, y: 0.75, width: 0.12, height: 0.04))
+            ],
+            captureDate: Date(),
+            sourceRect: .zero
+        )
+
+        let output = result.monospaceAlignedText(columns: 120, multicolumnSorting: false)
+        let lines = output.components(separatedBy: "\n").filter { !$0.isEmpty }
+
+        // Sıralama kapalıyken aynı y'deki bloklar aynı satırda birleşir
+        XCTAssertTrue(lines[0].contains("Left1"))
+        XCTAssertTrue(lines[0].contains("Right1"))
+        XCTAssertTrue(lines[1].contains("Left2"))
+        XCTAssertTrue(lines[1].contains("Right2"))
+    }
 }

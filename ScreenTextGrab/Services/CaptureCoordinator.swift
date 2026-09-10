@@ -1201,7 +1201,8 @@ final class CaptureCoordinator: CaptureCoordinating {
         }
 
         let monospaceText = selection.ocrResult.monospaceAlignedText(
-            columns: appState.monospaceLayoutSettings.columns
+            columns: appState.monospaceLayoutSettings.columns,
+            multicolumnSorting: appState.monospaceLayoutSettings.multicolumnSortingEnabled
         )
         return monospaceText.isEmpty ? selection.text : monospaceText
     }
@@ -1520,7 +1521,8 @@ final class CaptureCoordinator: CaptureCoordinating {
         let effectiveRawText: String
         if appState.monospaceLayoutSettings.isEnabled {
             let monospaceText = selection.ocrResult.monospaceAlignedText(
-                columns: appState.monospaceLayoutSettings.columns
+                columns: appState.monospaceLayoutSettings.columns,
+                multicolumnSorting: appState.monospaceLayoutSettings.multicolumnSortingEnabled
             )
             effectiveRawText = monospaceText.isEmpty ? rawText : monospaceText
         } else {

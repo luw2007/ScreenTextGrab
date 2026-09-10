@@ -256,7 +256,8 @@ final class AppState: ObservableObject {
     func setMonospaceLayoutEnabled(_ enabled: Bool) {
         monospaceLayoutSettings = MonospaceLayoutSettings(
             isEnabled: enabled,
-            columns: monospaceLayoutSettings.columns
+            columns: monospaceLayoutSettings.columns,
+            multicolumnSortingEnabled: monospaceLayoutSettings.multicolumnSortingEnabled
         )
         persistMonospaceLayoutSettingsIfNeeded()
     }
@@ -264,7 +265,17 @@ final class AppState: ObservableObject {
     func setMonospaceLayoutColumns(_ columns: Int) {
         monospaceLayoutSettings = MonospaceLayoutSettings(
             isEnabled: monospaceLayoutSettings.isEnabled,
-            columns: columns
+            columns: columns,
+            multicolumnSortingEnabled: monospaceLayoutSettings.multicolumnSortingEnabled
+        )
+        persistMonospaceLayoutSettingsIfNeeded()
+    }
+
+    func setMonospaceMulticolumnSorting(_ enabled: Bool) {
+        monospaceLayoutSettings = MonospaceLayoutSettings(
+            isEnabled: monospaceLayoutSettings.isEnabled,
+            columns: monospaceLayoutSettings.columns,
+            multicolumnSortingEnabled: enabled
         )
         persistMonospaceLayoutSettingsIfNeeded()
     }

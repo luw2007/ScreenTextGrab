@@ -156,6 +156,10 @@ struct SettingsView: View {
             ),
             monospaceLayoutColumns: appState.monospaceLayoutSettings.columns,
             onMonospaceLayoutColumnsChange: { appState.setMonospaceLayoutColumns($0) },
+            monospaceMulticolumnSortingBinding: Binding(
+                get: { appState.monospaceLayoutSettings.multicolumnSortingEnabled },
+                set: { appState.setMonospaceMulticolumnSorting($0) }
+            ),
             isRecordingHotkey: isRecordingHotkey,
             hotkeyDisplayLabel: appState.hotkeyDisplayLabel,
             hotkeyFeedback: hotkeyFeedback,
