@@ -250,4 +250,38 @@ final class CaptureOutputFormatterTests: XCTestCase {
             "Urun\tFiyat\r\nElma\t12.99"
         )
     }
+
+    func testMonospacePresetUsesOcrResultAlignment() {
+        let ocrResult = OCRResult(
+            blocks: [
+                OCRTextBlock(text: "Name", confidence: 0.95, boundingBox: CGRect(x: 0.10, y: 0.80, width: 0.08, height: 0.04)),
+                OCRTextBlock(text: "Value", confidence: 0.95, boundingBox: CGRect(x: 0.50, y: 0.80, width: 0.10, height: 0.04))
+            ],
+            captureDate: Date(),
+            sourceRect: .zero
+        )
+
+        let output = CaptureOutputFormatter.format(
+            rawText: "Name Value",
+            captureMode: .standard,
+            contentKind: .text,
+            preset: .monospace,
+            ocrResult: ocrResult
+        )
+
+        XCTAssertTrue(output.contains("Name"))
+        XCTAssertTrue(output.contains("Value"))
+        XCTAssertGreaterThan(output.count, "Name Value".count)
+    }
+
+    func testMonospacePresetFallsBackToRawTextWithoutOcrResult() {
+        let output = CaptureOutputFormatter.format(
+            rawText: "Hello World",
+            captureMode: .standard,
+            contentKind: .text,
+            preset: .monospace
+        )
+
+        XCTAssertEqual(output, "Hello World")
+    }
 }

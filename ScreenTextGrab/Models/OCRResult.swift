@@ -43,6 +43,125 @@ struct OCRResult: Sendable {
         }
     }
 
+    /// Eş aralıklı (monospace) hizalı metin üretir.
+    /// Metin bloklarının boundingBox konumlarını kullanarak satırlara ayırır,
+    /// yatay boşlukları space karakterleriyle ve dikey boşlukları boş satırlarla korur.
+    /// - Parameter columns: İsteğe bağlı karakter sütunu sayısı. Verilirse karakter genişliği
+    ///   bu değere göre hesaplanır; verilmezse bloklardan otomatik kestirilir.
+    func monospaceAlignedText(columns: Int? = nil) -> String {
+        guard !blocks.isEmpty else {
+            return ""
+        }
+
+        let charWidth = resolveCharacterWidth(columns: columns)
+        guard charWidth > 0 else {
+            return fullText
+        }
+
+        let lines = monospaceClusterLines()
+        guard !lines.isEmpty else {
+            return ""
+        }
+
+        let medianLineHeight = monospaceMedianLineHeight(lines: lines)
+
+        var output: [String] = []
+        var previousLineMinY: CGFloat?
+
+        for line in lines {
+            let sortedLine = line.sorted { $0.boundingBox.minX < $1.boundingBox.minX }
+            let lineMinY = sortedLine.map { $0.boundingBox.minY }.min() ?? 0
+            let lineMaxY = sortedLine.map { $0.boundingBox.maxY }.max() ?? 0
+
+            if let prevMinY = previousLineMinY, medianLineHeight > 0 {
+                let verticalGap = prevMinY - lineMaxY
+                let blankLineCount = max(0, Int((verticalGap / medianLineHeight).rounded()) - 1)
+                if blankLineCount > 0 {
+                    output.append(contentsOf: Array(repeating: "", count: blankLineCount))
+                }
+            }
+
+            output.append(monospaceLineText(sortedLine, charWidth: charWidth))
+            previousLineMinY = lineMinY
+        }
+
+        return output.joined(separator: "\n")
+    }
+
+    private func resolveCharacterWidth(columns: Int?) -> CGFloat {
+        if let columns, columns > 0 {
+            let minX = blocks.map { $0.boundingBox.minX }.min() ?? 0
+            let maxX = blocks.map { $0.boundingBox.maxX }.max() ?? 1
+            return max(0.001, (maxX - minX) / CGFloat(columns))
+        }
+
+        let widths = blocks
+            .filter { !$0.text.isEmpty }
+            .map { $0.boundingBox.width / CGFloat($0.text.count) }
+            .filter { $0 > 0 }
+            .sorted()
+
+        guard !widths.isEmpty else {
+            return 0.02
+        }
+
+        return widths[widths.count / 2]
+    }
+
+    private func monospaceClusterLines() -> [[OCRTextBlock]] {
+        let sortedByY = blocks.sorted { $0.boundingBox.midY > $1.boundingBox.midY }
+        let lineThreshold: CGFloat = 0.028
+
+        var lines: [[OCRTextBlock]] = []
+        for block in sortedByY {
+            if let lastMidY = lines.last?.first?.boundingBox.midY,
+               abs(block.boundingBox.midY - lastMidY) < lineThreshold {
+                lines[lines.count - 1].append(block)
+            } else {
+                lines.append([block])
+            }
+        }
+        return lines
+    }
+
+    private func monospaceMedianLineHeight(lines: [[OCRTextBlock]]) -> CGFloat {
+        let heights = lines
+            .map { line in
+                let minY = line.map { $0.boundingBox.minY }.min() ?? 0
+                let maxY = line.map { $0.boundingBox.maxY }.max() ?? 0
+                return maxY - minY
+            }
+            .filter { $0 > 0 }
+            .sorted()
+
+        guard !heights.isEmpty else {
+            return 0.04
+        }
+
+        return heights[heights.count / 2]
+    }
+
+    private func monospaceLineText(_ line: [OCRTextBlock], charWidth: CGFloat) -> String {
+        guard let first = line.first else {
+            return ""
+        }
+
+        var result = ""
+        var cursorX = first.boundingBox.minX
+
+        for block in line {
+            let horizontalGap = block.boundingBox.minX - cursorX
+            if horizontalGap > 0 {
+                let spaceCount = max(1, Int((horizontalGap / charWidth).rounded()))
+                result.append(String(repeating: " ", count: spaceCount))
+            }
+            result.append(block.text)
+            cursorX = block.boundingBox.maxX
+        }
+
+        return result
+    }
+
     private var standardFormattedText: String {
         groupedLines(lineThreshold: 0.03)
             .map { line in

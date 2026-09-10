@@ -6,7 +6,8 @@ enum CaptureOutputFormatter {
         captureMode: CaptureMode,
         contentKind: ClipboardHistoryEntry.ContentKind,
         preset: CaptureOutputPreset,
-        source: ClipboardHistoryEntry.SourceContext? = nil
+        source: ClipboardHistoryEntry.SourceContext? = nil,
+        ocrResult: OCRResult? = nil
     ) -> String {
         let trimmed = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
@@ -31,6 +32,8 @@ enum CaptureOutputFormatter {
                 contentKind: contentKind,
                 source: source
             )
+        case .monospace:
+            return ocrResult?.monospaceAlignedText() ?? trimmed
         }
     }
 
@@ -40,14 +43,16 @@ enum CaptureOutputFormatter {
         contentKind: ClipboardHistoryEntry.ContentKind,
         preset: CaptureOutputPreset,
         source: ClipboardHistoryEntry.SourceContext? = nil,
-        targetBundleIdentifier: String? = nil
+        targetBundleIdentifier: String? = nil,
+        ocrResult: OCRResult? = nil
     ) -> ClipboardPayload {
         let formattedText = format(
             rawText: rawText,
             captureMode: captureMode,
             contentKind: contentKind,
             preset: preset,
-            source: source
+            source: source,
+            ocrResult: ocrResult
         )
 
         guard !formattedText.isEmpty else {

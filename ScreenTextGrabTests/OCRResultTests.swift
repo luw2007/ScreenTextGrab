@@ -187,4 +187,110 @@ final class OCRResultTests: XCTestCase {
             "Kategori\tOcak\tSubat\tMart\nIcekler\t12\t14\t16\nToplam\t\t\t42"
         )
     }
+
+    // MARK: - Monospace Alignment
+
+    func testMonospaceAlignedTextPreservesHorizontalGap() {
+        let result = OCRResult(
+            blocks: [
+                OCRTextBlock(text: "Name", confidence: 0.95, boundingBox: CGRect(x: 0.10, y: 0.80, width: 0.08, height: 0.04)),
+                OCRTextBlock(text: "Value", confidence: 0.95, boundingBox: CGRect(x: 0.50, y: 0.80, width: 0.10, height: 0.04))
+            ],
+            captureDate: Date(),
+            sourceRect: .zero
+        )
+
+        let output = result.monospaceAlignedText()
+        XCTAssertTrue(output.hasPrefix("Name"))
+        XCTAssertTrue(output.hasSuffix("Value"))
+        XCTAssertGreaterThan(output.count, "Name Value".count)
+        XCTAssertEqual(output.components(separatedBy: "\n").count, 1)
+    }
+
+    func testMonospaceAlignedTextProducesMultipleLines() {
+        let result = OCRResult(
+            blocks: [
+                OCRTextBlock(text: "Hello", confidence: 0.95, boundingBox: CGRect(x: 0.10, y: 0.80, width: 0.10, height: 0.04)),
+                OCRTextBlock(text: "World", confidence: 0.95, boundingBox: CGRect(x: 0.10, y: 0.72, width: 0.10, height: 0.04))
+            ],
+            captureDate: Date(),
+            sourceRect: .zero
+        )
+
+        let output = result.monospaceAlignedText()
+        let lines = output.components(separatedBy: "\n")
+        XCTAssertEqual(lines.count, 2)
+        XCTAssertEqual(lines[0], "Hello")
+        XCTAssertEqual(lines[1], "World")
+    }
+
+    func testMonospaceAlignedTextInsertsBlankLinesForLargeVerticalGap() {
+        let result = OCRResult(
+            blocks: [
+                OCRTextBlock(text: "Top", confidence: 0.95, boundingBox: CGRect(x: 0.10, y: 0.80, width: 0.06, height: 0.04)),
+                OCRTextBlock(text: "Bottom", confidence: 0.95, boundingBox: CGRect(x: 0.10, y: 0.60, width: 0.12, height: 0.04))
+            ],
+            captureDate: Date(),
+            sourceRect: .zero
+        )
+
+        let output = result.monospaceAlignedText()
+        let lines = output.components(separatedBy: "\n")
+        XCTAssertEqual(lines.first, "Top")
+        XCTAssertEqual(lines.last, "Bottom")
+        XCTAssertGreaterThan(lines.count, 2)
+        XCTAssertTrue(lines.dropFirst().dropLast().allSatisfy { $0.isEmpty })
+    }
+
+    func testMonospaceAlignedTextEmptyBlocksReturnsEmpty() {
+        let result = OCRResult(
+            blocks: [],
+            captureDate: Date(),
+            sourceRect: .zero
+        )
+
+        XCTAssertEqual(result.monospaceAlignedText(), "")
+    }
+
+    func testMonospaceAlignedTextSingleBlock() {
+        let result = OCRResult(
+            blocks: [
+                OCRTextBlock(text: "Hello", confidence: 0.95, boundingBox: CGRect(x: 0.10, y: 0.80, width: 0.10, height: 0.04))
+            ],
+            captureDate: Date(),
+            sourceRect: .zero
+        )
+
+        XCTAssertEqual(result.monospaceAlignedText(), "Hello")
+    }
+
+    func testMonospaceAlignedTextSortsBlocksByXWithinLine() {
+        let result = OCRResult(
+            blocks: [
+                OCRTextBlock(text: "Right", confidence: 0.95, boundingBox: CGRect(x: 0.50, y: 0.80, width: 0.10, height: 0.04)),
+                OCRTextBlock(text: "Left", confidence: 0.95, boundingBox: CGRect(x: 0.10, y: 0.80, width: 0.08, height: 0.04))
+            ],
+            captureDate: Date(),
+            sourceRect: .zero
+        )
+
+        let output = result.monospaceAlignedText()
+        XCTAssertTrue(output.hasPrefix("Left"))
+        XCTAssertTrue(output.hasSuffix("Right"))
+    }
+
+    func testMonospaceAlignedTextWithExplicitColumns() {
+        let result = OCRResult(
+            blocks: [
+                OCRTextBlock(text: "A", confidence: 0.95, boundingBox: CGRect(x: 0.10, y: 0.80, width: 0.02, height: 0.04)),
+                OCRTextBlock(text: "B", confidence: 0.95, boundingBox: CGRect(x: 0.50, y: 0.80, width: 0.02, height: 0.04))
+            ],
+            captureDate: Date(),
+            sourceRect: .zero
+        )
+
+        let output = result.monospaceAlignedText(columns: 40)
+        XCTAssertTrue(output.hasPrefix("A"))
+        XCTAssertTrue(output.hasSuffix("B"))
+    }
 }

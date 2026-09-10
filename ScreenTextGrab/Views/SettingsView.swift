@@ -1442,7 +1442,8 @@ struct SettingsView: View {
             contentKind: entry.contentKind,
             source: entry.source,
             outputPreset: effectiveOutputPreset,
-            targetBundleIdentifier: appState.activeTargetBundleIdentifier
+            targetBundleIdentifier: appState.activeTargetBundleIdentifier,
+            ocrResult: nil
         ) else {
             historyFeedback = InlineFeedback(
                 message: "Kopyalama servisi şu anda hazır değil.",

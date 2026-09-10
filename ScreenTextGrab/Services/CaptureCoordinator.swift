@@ -38,7 +38,8 @@ protocol CaptureCoordinating: AnyObject {
         contentKind: ClipboardHistoryEntry.ContentKind,
         source: ClipboardHistoryEntry.SourceContext?,
         outputPreset: CaptureOutputPreset,
-        targetBundleIdentifier: String?
+        targetBundleIdentifier: String?,
+        ocrResult: OCRResult?
     ) -> ClipboardWriteResult
 }
 
@@ -56,7 +57,8 @@ extension CaptureCoordinating {
             contentKind: contentKind,
             source: source,
             outputPreset: outputPreset,
-            targetBundleIdentifier: nil
+            targetBundleIdentifier: nil,
+            ocrResult: nil
         )
     }
 }
@@ -649,7 +651,8 @@ final class CaptureCoordinator: CaptureCoordinating {
         contentKind: ClipboardHistoryEntry.ContentKind,
         source: ClipboardHistoryEntry.SourceContext?,
         outputPreset: CaptureOutputPreset,
-        targetBundleIdentifier: String? = nil
+        targetBundleIdentifier: String? = nil,
+        ocrResult: OCRResult? = nil
     ) -> ClipboardWriteResult {
         outputWriter.copyCapturedText(
             rawText: rawText,
@@ -657,7 +660,8 @@ final class CaptureCoordinator: CaptureCoordinating {
             contentKind: contentKind,
             source: source,
             outputPreset: outputPreset,
-            targetBundleIdentifier: targetBundleIdentifier
+            targetBundleIdentifier: targetBundleIdentifier,
+            ocrResult: ocrResult
         )
     }
 
@@ -1180,6 +1184,7 @@ final class CaptureCoordinator: CaptureCoordinating {
             source: source,
             outputPreset: outputPreset,
             ocrConfidence: best.ocrResult.averageConfidence,
+            ocrResult: best.ocrResult,
             notificationDisplayFrame: notificationDisplayFrame,
             successStatusMessage: CaptureRecognitionHeuristics.successStatusMessage(for: best)
         )
@@ -1510,6 +1515,7 @@ final class CaptureCoordinator: CaptureCoordinating {
             contentKind: historyContentKind(for: selection),
             source: currentWatchSession?.source,
             outputPreset: currentWatchSession?.outputPreset ?? appState.captureOutputPreset,
+            ocrResult: selection.ocrResult,
             notificationDisplayFrame: preferredDisplay?.frame,
             successStatusMessage: "👁 \(CaptureRecognitionHeuristics.successStatusMessage(for: selection))"
         )

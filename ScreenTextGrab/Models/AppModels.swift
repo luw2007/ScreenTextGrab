@@ -233,6 +233,7 @@ enum CaptureOutputPreset: String, CaseIterable, Codable, Equatable, Sendable, Id
     case office
     case markdown
     case json
+    case monospace
 
     var id: String { rawValue }
 
@@ -250,6 +251,8 @@ enum CaptureOutputPreset: String, CaseIterable, Codable, Equatable, Sendable, Id
             return "Markdown"
         case .json:
             return "JSON"
+        case .monospace:
+            return L10n.pair("Eş Aralıklı", "Monospace")
         }
     }
 
@@ -267,6 +270,8 @@ enum CaptureOutputPreset: String, CaseIterable, Codable, Equatable, Sendable, Id
             return "MD"
         case .json:
             return "JSON"
+        case .monospace:
+            return L10n.pair("Mono", "Mono")
         }
     }
 
@@ -284,6 +289,8 @@ enum CaptureOutputPreset: String, CaseIterable, Codable, Equatable, Sendable, Id
             return L10n.pair("Kod ve tablo için hazır", "Ready for code and tables")
         case .json:
             return L10n.pair("Otomasyon için yapılandırılmış", "Structured for automation")
+        case .monospace:
+            return L10n.pair("Konumu boşluklarla korur", "Preserves layout with spaces")
         }
     }
 
@@ -301,6 +308,8 @@ enum CaptureOutputPreset: String, CaseIterable, Codable, Equatable, Sendable, Id
             return L10n.pair("Kod ve tablo gibi içerikleri Markdown uyumlu biçimde hazırlar.", "Formats content like code and tables for Markdown.")
         case .json:
             return L10n.pair("Otomasyon ve entegrasyonlar için yapılandırılmış çıktı üretir.", "Produces structured output for automation and integrations.")
+        case .monospace:
+            return L10n.pair("Metin bloklarının ekran konumını kullanarak eş aralıklı hizalama üretir; terminal ve tablo görünümleri için ideal.", "Uses block positions to produce monospace-aligned text; ideal for terminal and table layouts.")
         }
     }
 }
