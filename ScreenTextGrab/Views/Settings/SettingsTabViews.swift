@@ -66,7 +66,7 @@ struct SettingsGeneralTabView: View {
         ScrollView {
             VStack(spacing: 14) {
                 SettingsSectionCard(
-                    title: L10n.pair("Arayüz Dili", "Interface Language"),
+                    title: L10n.triple("Arayüz Dili", "Interface Language", "界面语言"),
                     subtitle: interfaceLanguageDetail
                 ) {
                     Picker("", selection: interfaceLanguageBinding) {
@@ -89,7 +89,7 @@ struct SettingsGeneralTabView: View {
                 }
 
                 SettingsSectionCard(
-                    title: L10n.pair("Yakalama Modu", "Capture Mode"),
+                    title: L10n.triple("Yakalama Modu", "Capture Mode", "捕获模式"),
                     subtitle: L10n.pair("Metin, altyazı, kod veya tablo odaklı yakalama arasında geçiş yap.", "Switch between text, subtitle, code, or table-focused capture.")
                 ) {
                     LazyVGrid(
@@ -112,7 +112,7 @@ struct SettingsGeneralTabView: View {
                 }
 
                 SettingsSectionCard(
-                    title: L10n.pair("Çıktı Biçimi", "Output Format"),
+                    title: L10n.triple("Çıktı Biçimi", "Output Format", "输出格式"),
                     subtitle: outputPresetDetail
                 ) {
                     LazyVGrid(
@@ -131,58 +131,7 @@ struct SettingsGeneralTabView: View {
                 }
 
                 SettingsSectionCard(
-                    title: L10n.pair("Eş Aralıklı Düzen", "Monospace Layout"),
-                    subtitle: L10n.pair("OCR bloklarının ekran konumını kullanarak metni eş aralıklı hizalar. Terminal ve tablo görünümleri için uygun.", "Aligns text using OCR block positions. Suitable for terminal and table layouts.")
-                ) {
-                    Toggle(isOn: monospaceLayoutEnabledBinding) {
-                        Text(L10n.pair("Eş aralıklı hizalamayı kullan", "Use monospace alignment"))
-                            .font(.system(size: 12.5, weight: .semibold, design: .rounded))
-                    }
-                    .toggleStyle(.switch)
-                    .tint(.accentMint)
-
-                    if monospaceLayoutEnabledBinding.wrappedValue {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(L10n.pair("Sütun sayısı: \(monospaceLayoutColumns)", "Columns: \(monospaceLayoutColumns)"))
-                                .font(.system(size: 11.5, weight: .medium, design: .rounded))
-                                .foregroundStyle(.secondary)
-
-                            Slider(
-                                value: Binding(
-                                    get: { Double(monospaceLayoutColumns) },
-                                    set: { onMonospaceLayoutColumnsChange(Int($0.rounded())) }
-                                ),
-                                in: 40...200,
-                                step: 10
-                            )
-                            .tint(.accentMint)
-
-                            Text(L10n.pair("Daha fazla sütun = daha hassas yatay hizalama.", "More columns = more precise horizontal alignment."))
-                                .font(.system(size: 10.5, weight: .medium, design: .rounded))
-                                .foregroundStyle(.secondary)
-
-                            Rectangle()
-                                .fill(Color.white.opacity(0.08))
-                                .frame(height: 1)
-                                .padding(.vertical, 4)
-
-                            Toggle(isOn: monospaceMulticolumnSortingBinding) {
-                                Text(L10n.pair("Çok sütunlu okuma sırası", "Multi-column reading order"))
-                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                            }
-                            .toggleStyle(.switch)
-                            .tint(.accentMint)
-
-                            Text(L10n.pair("Boşluk ağacı ile sütunları algılar, sol sütunu tamamen okur sonra sağ sütuna geçer.", "Detects columns with a gap tree; reads the left column fully before the right column."))
-                                .font(.system(size: 10.5, weight: .medium, design: .rounded))
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(.top, 8)
-                    }
-                }
-
-                SettingsSectionCard(
-                    title: L10n.pair("Global Kısayol", "Global Shortcut"),
+                    title: L10n.triple("Global Kısayol", "Global Shortcut", "全局快捷键"),
                     subtitle: isRecordingHotkey
                         ? L10n.pair("Yeni kombinasyonu gir. Esc ile iptal edebilirsin.", "Enter the new combination. Press Esc to cancel.")
                         : L10n.pair("Yakalamayı her yerden başlatmak için kullanılır.", "Use it to start capture from anywhere.")
@@ -222,7 +171,7 @@ struct SettingsGeneralTabView: View {
                 }
 
                 SettingsSectionCard(
-                    title: L10n.pair("Açılışta Başlat", "Launch at Login"),
+                    title: L10n.triple("Açılışta Başlat", "Launch at Login", "开机启动"),
                     subtitle: launchAtLoginDetail
                 ) {
                     HStack(spacing: 12) {
@@ -258,7 +207,7 @@ struct SettingsGeneralTabView: View {
                 }
 
                 SettingsSectionCard(
-                    title: L10n.pair("URL Otomasyonu", "URL Automation"),
+                    title: L10n.triple("URL Otomasyonu", "URL Automation", "URL 自动化"),
                     subtitle: L10n.pair(
                         "stg:// bağlantılarının ekran yakalama ve dosya OCR tetiklemesine izin ver.",
                         "Allow stg:// links to trigger screen capture and file OCR."
@@ -281,7 +230,7 @@ struct SettingsGeneralTabView: View {
                 }
 
                 SettingsSectionCard(
-                    title: L10n.pair("İzleme Kuralları", "Watch Rules"),
+                    title: L10n.triple("İzleme Kuralları", "Watch Rules", "监听规则"),
                     subtitle: watchSummary
                 ) {
                     HStack(spacing: 10) {
@@ -319,7 +268,7 @@ struct SettingsGeneralTabView: View {
                 }
 
                 SettingsSectionCard(
-                    title: L10n.pair("Ekran Kaydı İzni", "Screen Recording Permission"),
+                    title: L10n.triple("Ekran Kaydı İzni", "Screen Recording Permission", "屏幕录制权限"),
                     subtitle: permissionSubtitle
                 ) {
                     HStack(spacing: 12) {
@@ -365,7 +314,7 @@ struct SettingsGeneralTabView: View {
                 }
 
                 SettingsSectionCard(
-                    title: L10n.pair("Uygulama Profilleri", "App Profiles"),
+                    title: L10n.triple("Uygulama Profilleri", "App Profiles", "应用配置"),
                     subtitle: appProfileSummary
                 ) {
                     Menu {
@@ -454,7 +403,7 @@ struct SettingsOCRTabView: View {
         ScrollView {
             VStack(spacing: 14) {
                 SettingsSectionCard(
-                    title: L10n.pair("Tanıma Modu", "Recognition Mode"),
+                    title: L10n.triple("Tanıma Modu", "Recognition Mode", "识别模式"),
                     subtitle: L10n.pair("Otomatik algılamayı açabilir veya tercih ettiğin dilleri sabitleyebilirsin.", "Turn on automatic detection or pin the languages you prefer.")
                 ) {
                     Toggle(L10n.ocrAutomaticLanguage, isOn: automaticDetectionBinding)
@@ -473,7 +422,7 @@ struct SettingsOCRTabView: View {
                 }
 
                 SettingsSectionCard(
-                    title: L10n.pair("Desteklenen Diller", "Supported Languages"),
+                    title: L10n.triple("Desteklenen Diller", "Supported Languages", "支持的语言"),
                     subtitle: ocrSelectionSummary
                 ) {
                     LazyVGrid(
@@ -548,7 +497,7 @@ struct SettingsHistoryTabView: View {
         ScrollView {
             VStack(spacing: 14) {
                 SettingsSectionCard(
-                    title: L10n.pair("Kayıtlı Bölgeler", "Saved Regions"),
+                    title: L10n.triple("Kayıtlı Bölgeler", "Saved Regions", "保存的区域"),
                     subtitle: savedRegionsSummary
                 ) {
                     HStack(spacing: 10) {
@@ -735,7 +684,7 @@ struct SettingsHistoryTabView: View {
                 }
 
                 SettingsSectionCard(
-                    title: L10n.pair("Yakalama Geçmişi", "Capture History"),
+                    title: L10n.triple("Yakalama Geçmişi", "Capture History", "捕获历史"),
                     subtitle: historySummary
                 ) {
                     TextField(L10n.pair("Geçmişte ara", "Search history"), text: historySearchQuery)
@@ -821,7 +770,7 @@ struct SettingsDiagnosticsTabView: View {
         ScrollView {
             VStack(spacing: 14) {
                 SettingsSectionCard(
-                    title: L10n.pair("İzin Tanısı", "Permission Diagnostics"),
+                    title: L10n.triple("İzin Tanısı", "Permission Diagnostics", "权限诊断"),
                     subtitle: permissionDiagnostics?.currentState.uiMessage ?? permissionStateMessage
                 ) {
                     VStack(alignment: .leading, spacing: 10) {
