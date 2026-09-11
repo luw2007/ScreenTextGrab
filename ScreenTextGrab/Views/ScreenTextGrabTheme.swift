@@ -2,7 +2,21 @@ import SwiftUI
 import AppKit
 
 extension Color {
-    // MARK: - Background surfaces (dynamic)
+    // Dynamic "white" — white in dark mode, black in light mode.
+    // Replaces hardcoded .white / Color.stgWhite for text and subtle fills.
+    static let stgWhite = Color(NSColor(name: nil) { appearance in
+        appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            ? NSColor.white
+            : NSColor.black
+    })
+}
+
+// Make .stgWhite work in ShapeStyle contexts (foregroundStyle, fill, stroke, etc.)
+extension ShapeStyle where Self == Color {
+    static var stgWhite: Color { Color.stgWhite }
+}
+
+extension Color {
     static let surfaceTop = Color(NSColor(name: nil) { appearance in
         appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
             ? NSColor(red: 0.03, green: 0.07, blue: 0.11, alpha: 1.0)

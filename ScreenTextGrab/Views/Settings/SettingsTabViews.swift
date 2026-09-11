@@ -155,7 +155,7 @@ struct SettingsGeneralTabView: View {
                         Button(action: toggleHotkeyRecording) {
                             Text(isRecordingHotkey ? L10n.pair("Tuşa Bas...", "Press Keys...") : hotkeyDisplayLabel)
                                 .font(.system(size: 12, weight: .bold, design: .rounded))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(.stgWhite)
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 10)
                                 .background(

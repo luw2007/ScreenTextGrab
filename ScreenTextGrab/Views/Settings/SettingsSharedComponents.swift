@@ -125,7 +125,7 @@ struct SettingsFilterChip: View {
         Button(action: action) {
             Text(title)
                 .font(.system(size: 10.5, weight: .bold, design: .rounded))
-                .foregroundStyle(isSelected ? Color.white : Color.primary)
+                .foregroundStyle(isSelected ? Color.stgWhite : Color.primary)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 7)
                 .background(
